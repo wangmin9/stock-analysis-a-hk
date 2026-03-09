@@ -1,0 +1,159 @@
+{
+  "新能源车": {
+    "keywords": ["新能源车", "新能源汽车", "电动车", "电动汽车", "动力电池", "锂电池", "锂矿", "盐湖提锂", "充电桩", "换电", "车联网", "自动驾驶"],
+    "related_stocks": [
+      {"code": "sz002594", "name": "比亚迪", "weight": 5},
+      {"code": "sz300750", "name": "宁德时代", "weight": 5},
+      {"code": "sz002460", "name": "赣锋锂业", "weight": 4},
+      {"code": "sz002466", "name": "天齐锂业", "weight": 4},
+      {"code": "sh600438", "name": "通威股份", "weight": 3},
+      {"code": "sz002812", "name": "恩捷股份", "weight": 3},
+      {"code": "sz300014", "name": "亿纬锂能", "weight": 3},
+      {"code": "hk09863", "name": "蔚来", "weight": 3},
+      {"code": "hk02015", "name": "理想汽车", "weight": 3},
+      {"code": "hk09868", "name": "小鹏汽车", "weight": 3}
+    ]
+  },
+  "半导体": {
+    "keywords": ["芯片", "半导体", "集成电路", "IC", "光刻机", "EDA", "晶圆", "光刻胶", "MCU", "FPGA", "存储芯片", "功率半导体", "第三代半导体"],
+    "related_stocks": [
+      {"code": "sh688981", "name": "中芯国际", "weight": 5},
+      {"code": "sz002371", "name": "北方华创", "weight": 4},
+      {"code": "sh603986", "name": "兆易创新", "weight": 4},
+      {"code": "sz300782", "name": "卓胜微", "weight": 4},
+      {"code": "sz002049", "name": "紫光国微", "weight": 4},
+      {"code": "sh688012", "name": "中微公司", "weight": 3},
+      {"code": "sz002156", "name": "通富微电", "weight": 3},
+      {"code": "sh600584", "name": "长电科技", "weight": 3},
+      {"code": "hk00981", "name": "中芯国际", "weight": 5},
+      {"code": "hk01347", "name": "华虹半导体", "weight": 4}
+    ]
+  },
+  "人工智能": {
+    "keywords": ["人工智能", "AI", "大模型", "LLM", "算力", "GPU", "服务器", "AIDC", "数据中心", "CPO", "光模块", "AI芯片", "多模态"],
+    "related_stocks": [
+      {"code": "sh601360", "name": "三六零", "weight": 4},
+      {"code": "sz002230", "name": "科大讯飞", "weight": 4},
+      {"code": "sz300458", "name": "全志科技", "weight": 3},
+      {"code": "sz000977", "name": "浪潮信息", "weight": 5},
+      {"code": "sh603019", "name": "中科曙光", "weight": 4},
+      {"code": "sz300308", "name": "中际旭创", "weight": 5},
+      {"code": "sz002261", "name": "拓维信息", "weight": 3},
+      {"code": "sz300229", "name": "拓尔思", "weight": 3},
+      {"code": "hk00700", "name": "腾讯控股", "weight": 5},
+      {"code": "hk09988", "name": "阿里巴巴", "weight": 5},
+      {"code": "hk01810", "name": "小米集团", "weight": 4},
+      {"code": "hk09618", "name": "百度集团", "weight": 4}
+    ]
+  },
+  "医药生物": {
+    "keywords": ["医药", "创新药", "CXO", "医疗器械", "医疗", "生物医药", "体外诊断", "IVD", "疫苗", "医美", "眼科", "牙科", "中药"],
+    "related_stocks": [
+      {"code": "sh600276", "name": "恒瑞医药", "weight": 5},
+      {"code": "sz300760", "name": "迈瑞医疗", "weight": 5},
+      {"code": "sz300122", "name": "智飞生物", "weight": 4},
+      {"code": "sh600436", "name": "片仔癀", "weight": 4},
+      {"code": "sz000538", "name": "云南白药", "weight": 4},
+      {"code": "sz300347", "name": "泰格医药", "weight": 3},
+      {"code": "sz300759", "name": "康龙化成", "weight": 3},
+      {"code": "sz002821", "name": "凯莱英", "weight": 3},
+      {"code": "hk02269", "name": "药明生物", "weight": 5},
+      {"code": "hk02359", "name": "药明康德", "weight": 5},
+      {"code": "hk01093", "name": "石药集团", "weight": 4}
+    ]
+  },
+  "光伏新能源": {
+    "keywords": ["光伏", "太阳能", "组件", "逆变器", "硅料", "硅片", "储能", "电池", "TOPCon", "HJT", "风电", "新能源", "绿电", "虚拟电厂"],
+    "related_stocks": [
+      {"code": "sh601012", "name": "隆基绿能", "weight": 5},
+      {"code": "sz002594", "name": "比亚迪", "weight": 5},
+      {"code": "sz300274", "name": "阳光电源", "weight": 4},
+      {"code": "sz002459", "name": "晶澳科技", "weight": 4},
+      {"code": "sh600438", "name": "通威股份", "weight": 4},
+      {"code": "sh600089", "name": "特变电工", "weight": 3},
+      {"code": "sz002129", "name": "TCL中环", "weight": 3},
+      {"code": "sz300763", "name": "锦浪科技", "weight": 3},
+      {"code": "hk09686", "name": "新特能源", "weight": 4},
+      {"code": "hk01799", "name": "协鑫科技", "weight": 3}
+    ]
+  },
+  "消费": {
+    "keywords": ["消费", "白酒", "食品饮料", "免税", "旅游", "酒店", "航空", "餐饮", "零售", "美妆", "宠物经济", "母婴", "家电"],
+    "related_stocks": [
+      {"code": "sh600519", "name": "贵州茅台", "weight": 5},
+      {"code": "sz000858", "name": "五粮液", "weight": 5},
+      {"code": "sh600887", "name": "伊利股份", "weight": 4},
+      {"code": "sz002594", "name": "比亚迪", "weight": 4},
+      {"code": "sh601888", "name": "中国中免", "weight": 4},
+      {"code": "sz000568", "name": "泸州老窖", "weight": 3},
+      {"code": "sz002304", "name": "洋河股份", "weight": 3},
+      {"code": "sz002032", "name": "苏泊尔", "weight": 3},
+      {"code": "hk00700", "name": "腾讯控股", "weight": 4},
+      {"code": "hk09988", "name": "阿里巴巴", "weight": 4},
+      {"code": "hk01024", "name": "快手", "weight": 3},
+      {"code": "hk09626", "name": "美团", "weight": 5}
+    ]
+  },
+  "金融地产": {
+    "keywords": ["金融", "银行", "证券", "保险", "地产", "房地产", "基建", "建材", "家居", "工程机械"],
+    "related_stocks": [
+      {"code": "sh600036", "name": "招商银行", "weight": 5},
+      {"code": "sh601318", "name": "中国平安", "weight": 5},
+      {"code": "sh600030", "name": "中信证券", "weight": 4},
+      {"code": "sz000002", "name": "万科A", "weight": 4},
+      {"code": "sh600048", "name": "保利发展", "weight": 4},
+      {"code": "sh601668", "name": "中国建筑", "weight": 3},
+      {"code": "sh600031", "name": "三一重工", "weight": 3},
+      {"code": "sz000333", "name": "美的集团", "weight": 3},
+      {"code": "hk03968", "name": "招商银行", "weight": 5},
+      {"code": "hk02318", "name": "中国平安", "weight": 5},
+      {"code": "hk00005", "name": "汇丰控股", "weight": 4}
+    ]
+  },
+  "数字经济": {
+    "keywords": ["数字经济", "信创", "国产化", "操作系统", "数据库", "中间件", "云计算", "大数据", "数据要素", "网络安全", "信创", "电子证照", "政务信息化"],
+    "related_stocks": [
+      {"code": "sz000977", "name": "浪潮信息", "weight": 5},
+      {"code": "sh600588", "name": "用友网络", "weight": 4},
+      {"code": "sz002410", "name": "广联达", "weight": 4},
+      {"code": "sz300773", "name": "拉卡拉", "weight": 3},
+      {"code": "sh688111", "name": "金山办公", "weight": 4},
+      {"code": "sz300253", "name": "卫宁健康", "weight": 3},
+      {"code": "sz300454", "name": "深信服", "weight": 3},
+      {"code": "sz002405", "name": "四维图新", "weight": 3},
+      {"code": "hk00981", "name": "中芯国际", "weight": 4},
+      {"code": "hk00268", "name": "金蝶国际", "weight": 4},
+      {"code": "hk00700", "name": "腾讯控股", "weight": 5}
+    ]
+  },
+  "军工": {
+    "keywords": ["军工", "国防", "航天", "航空", "船舶", "兵器", "军工电子", "导弹", "卫星", "北斗", "大飞机", "军民融合"],
+    "related_stocks": [
+      {"code": "sh600893", "name": "航发动力", "weight": 5},
+      {"code": "sz002179", "name": "中航光电", "weight": 4},
+      {"code": "sz000738", "name": "航发控制", "weight": 4},
+      {"code": "sh600765", "name": "中航重机", "weight": 4},
+      {"code": "sz002025", "name": "航天电器", "weight": 3},
+      {"code": "sh600372", "name": "中航电子", "weight": 3},
+      {"code": "sz000768", "name": "中航西飞", "weight": 3},
+      {"code": "sh600150", "name": "中国船舶", "weight": 3},
+      {"code": "hk02357", "name": "中航科工", "weight": 4},
+      {"code": "hk01333", "name": "中国航天万源", "weight": 3}
+    ]
+  },
+  "有色金属": {
+    "keywords": ["有色", "金属", "铜", "铝", "黄金", "白银", "稀土", "锂矿", "钴", "镍", "锡", "锌", "贵金属", "小金属"],
+    "related_stocks": [
+      {"code": "sh600547", "name": "山东黄金", "weight": 5},
+      {"code": "sz000878", "name": "云南铜业", "weight": 4},
+      {"code": "sh601677", "name": "明泰铝业", "weight": 3},
+      {"code": "sz002460", "name": "赣锋锂业", "weight": 5},
+      {"code": "sz002466", "name": "天齐锂业", "weight": 5},
+      {"code": "sz000831", "name": "中国稀土", "weight": 4},
+      {"code": "sh600111", "name": "北方稀土", "weight": 4},
+      {"code": "sh603799", "name": "华友钴业", "weight": 4},
+      {"code": "hk01787", "name": "山东黄金", "weight": 5},
+      {"code": "hk02600", "name": "中国铝业", "weight": 4}
+    ]
+  }
+}
