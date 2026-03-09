@@ -68,59 +68,73 @@ def get_kline_data(stock_code: str, period: str = 'day', count: int = 100) -> Op
         else:
             raise ValueError(f"无法识别股票代码市场: {stock_code}")
     
-    prefix = STOCK_PREFIX[market]
-    secid = f"{prefix}.{code}"
-    
-    # 周期映射
-    period_map = {
-        'day': '101',
-        'week': '102',
-        'month': '103',
-        '5min': '5',
-        '15min': '15',
-        '30min': '30',
-        '60min': '60'
+    # 新浪 API 仅支持：日线(240)、分钟线(5/15/30/60)，周线/月线需从日线重采样
+    supported_periods = ['day', 'week', 'month', '5min', '15min', '30min', '60min']
+    if period not in supported_periods:
+        raise ValueError(f"不支持的周期: {period}, 支持的周期: {supported_periods}")
+
+    # 周线/月线：先取日线再重采样（新浪 API 不直接支持）
+    if period in ('week', 'month'):
+        daily_count = count * 6 if period == 'week' else count * 25  # 预留足够日线
+        daily_count = min(daily_count, 1023)  # 新浪单次最多 1023 条
+        df = _fetch_sina_kline(stock_code, market, code, 'day', daily_count)
+        if df is None:
+            return _generate_mock_kline_data(stock_code, count)
+        df = _resample_to_period(df, period, count)
+        df['stock_code'] = stock_code
+        df['stock_name'] = get_realtime_quote(stock_code)['name']
+        print(f"✅ 获取 {df['stock_name'].iloc[0]}({stock_code}) {period}K线数据成功，共{len(df)}条（由日线重采样）")
+        return df
+
+    # 日线/分钟线：直接请求
+    df = _fetch_sina_kline(stock_code, market, code, period, count)
+    if df is None:
+        return _generate_mock_kline_data(stock_code, count)
+    df['stock_code'] = stock_code
+    df['stock_name'] = get_realtime_quote(stock_code)['name']
+    print(f"✅ 获取 {df['stock_name'].iloc[0]}({stock_code}) {period}K线数据成功，共{len(df)}条")
+    return df
+
+
+def _fetch_sina_kline(stock_code: str, market: str, code: str, period: str, count: int) -> Optional[pd.DataFrame]:
+    """从新浪 API 获取 K 线（仅支持 day 和分钟线）"""
+    scale_map = {
+        'day': 240,
+        '5min': 5,
+        '15min': 15,
+        '30min': 30,
+        '60min': 60,
     }
-    
-    if period not in period_map:
-        raise ValueError(f"不支持的周期: {period}, 支持的周期: {list(period_map.keys())}")
-    
-    # 新浪财经K线API（和实时行情同域名，可访问）
+    if period not in scale_map:
+        return None
+
     if market == 'hk':
-        # 港股
-        url = f"https://finance.sina.com.cn/stock/hk/api/jsonp.php/=/HK_MarketData.getKLineData"
+        url = "https://finance.sina.com.cn/stock/hk/api/jsonp.php/=/HK_MarketData.getKLineData"
         symbol = f"{market}{code}"
     else:
-        # A股
-        url = f"https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketData.getKLineData"
+        url = "https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketData.getKLineData"
         symbol = f"{market}{code}"
-    
+
     params = {
         'symbol': symbol,
-        'scale': 240 if period == 'day' else 60 if period == '60min' else 30 if period == '30min' else 15 if period == '15min' else 5,
+        'scale': scale_map[period],
         'ma': 'no',
         'datalen': str(count)
     }
-    
+
     try:
-        # 随机选择User-Agent
         headers = {
             'Referer': 'https://finance.sina.com.cn',
             'User-Agent': random.choice(USER_AGENTS)
         }
         response = session.get(url, params=params, headers=headers, timeout=15)
         response.raise_for_status()
-        
-        # 解析JSONP格式
-        import re
         json_str = re.search(r'\((.*)\)', response.text).group(1)
         data = json.loads(json_str)
-        
         if not data:
             print(f"新浪API返回数据为空: {stock_code}")
             return None
-            
-        # 解析数据
+
         records = []
         for item in data[-count:]:
             records.append({
@@ -130,20 +144,31 @@ def get_kline_data(stock_code: str, period: str = 'day', count: int = 100) -> Op
                 'low': float(item['low']),
                 'close': float(item['close']),
                 'volume': float(item['volume']),
-                'amount': float(item['volume']) * float(item['close'])  # 估算成交额
+                'amount': float(item['volume']) * float(item['close'])
             })
-        
         df = pd.DataFrame(records)
         df['time'] = pd.to_datetime(df['time'])
-        df['stock_code'] = stock_code
-        df['stock_name'] = get_realtime_quote(stock_code)['name']
-        
-        print(f"✅ 获取 {df['stock_name'].iloc[0]}({stock_code}) 实盘K线数据成功，共{len(df)}条")
         return df
-    
     except Exception as e:
-        print(f"获取K线数据失败: {e}，使用模拟数据")
-        return _generate_mock_kline_data(stock_code, count)
+        print(f"获取K线数据失败: {e}")
+        return None
+
+
+def _resample_to_period(df: pd.DataFrame, period: str, count: int) -> pd.DataFrame:
+    """将日线数据重采样为周线或月线"""
+    df = df.set_index('time').sort_index()
+    agg_dict = {
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volume': 'sum',
+        'amount': 'sum'
+    }
+    freq = 'W-FRI' if period == 'week' else 'ME'  # W-FRI=周五结束周, ME=月末
+    resampled = df.resample(freq).agg(agg_dict).dropna()
+    resampled = resampled.reset_index().tail(count)
+    return resampled
 
 def _generate_mock_kline_data(stock_code: str, count: int) -> pd.DataFrame:
     """生成模拟K线数据用于功能测试"""
