@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-动态获取概念板块相关个股工具
-支持通过关键词搜索东方财富、同花顺等平台的概念板块成分股
-不需要提前缓存个股列表，完全通用
+概念板块个股查询工具
+支持东方财富 API + 本地缓存 + 内置映射兜底
 """
 
 import requests
 import json
-import re
+import time
 import random
-from typing import List, Dict, Optional
+from pathlib import Path
+from typing import List, Dict
 from urllib.parse import quote
 
 # User-Agent 池
@@ -21,45 +21,56 @@ USER_AGENTS = [
     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 ]
 
+CACHE_DIR = Path(__file__).parent.parent / "cache" / "concepts"
+CACHE_EXPIRE_DAYS = 7
+
 session = requests.Session()
 session.headers.update({
     'User-Agent': random.choice(USER_AGENTS),
     'Accept': '*/*',
     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Encoding': 'identity',  # 禁用gzip压缩，避免LibreSSL环境下解压失败
     'Connection': 'keep-alive'
 })
 
-def search_concept_stocks(keyword: str) -> List[Dict]:
+
+def search_concept_stocks(keyword: str, use_cache: bool = True) -> List[Dict]:
     """
     通过关键词搜索相关概念板块的个股列表
-    
+
     Args:
-        keyword: 行业/产品/概念关键词，例如 "燃气轮机", "钾肥", "AI算力"
-        
+        keyword: 行业/产品/概念关键词，例如 "燃气轮机", "钾肥", "海上风电"
+        use_cache: 是否使用本地缓存（7天有效）
+
     Returns:
-        个股列表，每个元素包含:
-        {
-            "code": "sh600875",
-            "name": "东方电气",
-            "concept": "燃气轮机",
-            "relevance": 5,  # 相关性评分 1-5，越高越相关
-            "business": "公司主营业务包含燃气轮机研发制造，国内龙头"
-        }
+        个股列表，每个元素包含: code, name, concept, relevance, business
     """
-    # 先尝试东方财富概念搜索
+    # 1. 检查缓存
+    if use_cache:
+        cache_file = CACHE_DIR / f"{keyword}.json"
+        if cache_file.exists():
+            if time.time() - cache_file.stat().st_mtime < CACHE_EXPIRE_DAYS * 86400:
+                try:
+                    with open(cache_file, 'r', encoding='utf-8') as f:
+                        return json.load(f)
+                except Exception:
+                    pass
+
+    # 2. 东方财富 API
     stocks = _search_eastmoney_concept(keyword)
     if stocks:
+        if use_cache:
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            with open(CACHE_DIR / f"{keyword}.json", 'w', encoding='utf-8') as f:
+                json.dump(stocks, f, ensure_ascii=False, indent=2)
         return stocks
-    
-    # 失败则尝试网页搜索
-    stocks = _search_web_concept(keyword)
-    return stocks
+
+    # 3. 内置映射兜底
+    return _get_fallback_stocks(keyword)
 
 def _search_eastmoney_concept(keyword: str) -> List[Dict]:
     """从东方财富搜索概念板块个股"""
     try:
-        # 1. 搜索概念板块ID
         search_url = f"https://searchapi.eastmoney.com/api/suggest/get?input={quote(keyword)}&type=14&token=D43BF722C8E39585C3EB54EE3A6D62E5"
         headers = {
             'Referer': 'https://www.eastmoney.com/',
@@ -68,55 +79,55 @@ def _search_eastmoney_concept(keyword: str) -> List[Dict]:
         response = session.get(search_url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
-        
-        if not data.get('Result') or not data['Result'].get('ConceptPlate'):
+
+        # 适配东方财富返回结构（新旧两种）
+        plate_code = None
+        plate_name = None
+        if data.get('QuotationCodeTable') and data['QuotationCodeTable'].get('Data'):
+            concept = data['QuotationCodeTable']['Data'][0]
+            plate_code = concept['Code'].replace('BK', '')
+            plate_name = concept['Name']
+        elif data.get('Result') and data['Result'].get('ConceptPlate'):
+            concept = data['Result']['ConceptPlate'][0]
+            plate_code = concept['Code']
+            plate_name = concept['Name']
+        if not plate_code or not plate_name:
             return []
-            
-        # 取第一个匹配的概念板块
-        concept = data['Result']['ConceptPlate'][0]
-        plate_code = concept['Code']
-        plate_name = concept['Name']
-        
-        # 2. 获取板块成分股
+
         stock_url = f"https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=50&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&wbp2u=|0|0|0|web&fid=f3&fs=b:BK{plate_code}&fields=f12,f14,f2,f3,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f204,f205,f124,f1,f13"
         response = session.get(stock_url, headers=headers, timeout=10)
         response.raise_for_status()
         stock_data = response.json()
-        
+
         if not stock_data.get('data') or not stock_data['data'].get('diff'):
             return []
-            
+
         stocks = []
-        for item in stock_data['data']['diff']:
-            # 格式化股票代码
+        for i, item in enumerate(stock_data['data']['diff']):
             code = item['f12']
             if code.startswith('6'):
                 full_code = f"sh{code}"
             elif code.startswith(('0', '3')):
                 full_code = f"sz{code}"
             else:
-                continue  # 跳过其他市场
-                
+                continue
+            relevance = 5 if i < 20 else 4 if i < 50 else 3
             stocks.append({
                 "code": full_code,
                 "name": item['f14'],
                 "concept": plate_name,
-                "relevance": 5,  # 概念成分股默认相关性最高
+                "relevance": relevance,
                 "business": f"属于{plate_name}概念板块"
             })
-            
-        return stocks[:20]  # 最多返回20只
-        
+        return stocks[:30]
+
     except Exception as e:
         print(f"东方财富概念搜索失败: {e}")
         return []
 
-def _search_web_concept(keyword: str) -> List[Dict]:
-    """从网页搜索获取相关个股（备用方案）"""
-    try:
-        # 这里可以集成搜索引擎API，或者使用知识图谱
-        # 暂时先返回常用的匹配逻辑，后续可以扩展
-        common_mapping = {
+def _get_fallback_stocks(keyword: str) -> List[Dict]:
+    """API 失败时使用内置映射兜底"""
+    common_mapping = {
             "燃气轮机": [
                 {"code": "sh600875", "name": "东方电气", "relevance": 5, "business": "国内燃气轮机龙头，具备重型燃机自主研发能力"},
                 {"code": "sh601727", "name": "上海电气", "relevance": 5, "business": "国内第二大燃气轮机制造商"},
@@ -171,9 +182,22 @@ def _search_web_concept(keyword: str) -> List[Dict]:
                 {"code": "sh688660", "name": "电气风电", "relevance": 5, "business": "上海电气旗下海上风电平台，大容量机组竞争力强"},
                 {"code": "sz002531", "name": "天顺风能", "relevance": 4, "business": "海上风电塔筒/管桩龙头，产业链核心配套"},
                 {"code": "sh603606", "name": "东方电缆", "relevance": 4, "business": "海上风电场内海缆供应商，市占率超50%"},
-                {"code": "sh600875", "name": "东方电气", "relevance": 4, "business": "国内风电主机制造商之一，海上风电业务布局"},
-                {"code": "sh600398", "name": "海澜之家", "relevance": 3, "business": "参股海上风电项目，享有发电收益"},
-                {"code": "sz300750", "name": "宁德时代", "relevance": 3, "business": "海上风电储能配套电池系统"}
+                {"code": "sh600875", "name": "东方电气", "relevance": 4, "business": "国内风电主机制造商之一，海上风电业务布局"}
+            ],
+            "特高压": [
+                {"code": "sz002028", "name": "思源电气", "relevance": 5, "business": "特高压核心设备供应商，GIS、换流阀市占率领先"},
+                {"code": "sh600406", "name": "国电南瑞", "relevance": 5, "business": "电网自动化绝对龙头，特高压二次设备市占率第一"},
+                {"code": "sh600312", "name": "平高电气", "relevance": 4, "business": "特高压开关设备龙头"},
+                {"code": "sz000400", "name": "许继电气", "relevance": 4, "business": "特高压直流设备核心供应商"},
+                {"code": "sh600089", "name": "特变电工", "relevance": 5, "business": "特高压变压器龙头，新能源EPC业务协同发展"},
+                {"code": "sh601179", "name": "中国西电", "relevance": 4, "business": "特高压一次设备核心供应商"}
+            ],
+            "电力电网": [
+                {"code": "sh600406", "name": "国电南瑞", "relevance": 5, "business": "电网自动化龙头，受益于电网投资增长"},
+                {"code": "sz002028", "name": "思源电气", "relevance": 5, "business": "输配电设备全产业链布局"},
+                {"code": "sz000400", "name": "许继电气", "relevance": 4, "business": "直流输电设备龙头"},
+                {"code": "sh600312", "name": "平高电气", "relevance": 4, "business": "开关设备龙头"},
+                {"code": "sh601877", "name": "正泰电器", "relevance": 4, "business": "低压电器龙头，光伏+储能协同发展"}
             ],
             "海缆": [
                 {"code": "sh603606", "name": "东方电缆", "relevance": 5, "business": "国内海缆绝对龙头，35kV/220kV/500kV全覆盖，海上风电海缆市占率超50%"},
@@ -203,16 +227,13 @@ def _search_web_concept(keyword: str) -> List[Dict]:
             ]
         }
         
-        # 模糊匹配关键词
-        for key, stocks in common_mapping.items():
-            if key in keyword or keyword in key:
-                return stocks
-                
-        return []
-        
-    except Exception as e:
-        print(f"网页搜索失败: {e}")
-        return []
+    # 模糊匹配关键词
+    for key, stocks in common_mapping.items():
+        if key in keyword or keyword in key:
+            for s in stocks:
+                s.setdefault("concept", key)
+            return stocks
+    return []
 
 if __name__ == "__main__":
     import sys

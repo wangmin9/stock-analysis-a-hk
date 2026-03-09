@@ -148,10 +148,10 @@ J --> K[输出交易建议 + 风险提示]
   - 输出：完整的技术分析报告（实时行情、缠论分析、均线、成交量、操作建议）
   - ⚠️ 一站式分析工具，集成了下面所有核心工具的功能
 
-- `concept_stock_fetcher.py` - **【核心工具】** 根据关键词查询概念股，支持东方财富API + 内置映射备用
+- `concept_stock_fetcher.py` - **【核心工具】** 根据关键词查询概念股，东方财富 API + 7 天本地缓存 + 内置映射兜底
   - 输入：关键词（如"燃气轮机"）
   - 输出：概念股列表（代码、名称、相关性评分、业务描述）
-  - 用法：`python3 concept_stock_fetcher.py 海上风电`
+  - 用法：`python scripts/concept_stock_fetcher.py 海上风电`
   - ⚠️ 不做语义判断，仅根据关键词查询
 
 - `get_stock_data.py` - **【核心工具】** 获取个股K线数据、实时行情
@@ -166,7 +166,6 @@ J --> K[输出交易建议 + 风险提示]
   - 可作为 Python 模块导入使用：`from chan_theory_analyzer import ChanTheoryAnalyzer`
   - ⚠️ 不生成交易建议
 
-- `dynamic_concept_fetcher.py` - 动态概念抓取，支持本地缓存
 - `trading_decision.py` - 交易决策参考模板（AI 可参考但不完全依赖）
 
 ### references/（参考资料，非强制依赖）
